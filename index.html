@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mist Hub Key Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #2c2c2c;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: #3c3c3c;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        #keyOutput {
+            font-size: 18px;
+            margin: 20px 0;
+            padding: 10px;
+            background: #4c4c4c;
+            border: 1px solid #fff;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mist Hub Key Generator</h1>
+        <p>Click below to generate a key valid for 12 hours.</p>
+        <button onclick="generateKey()">Generate Key</button>
+        <div id="keyOutput">Your key will appear here.</div>
+        <p>Copy the key and paste it into Mist Hub in Roblox.</p>
+        <p>Key expires after 12 hours. Return via Linkvertise for a new one.</p>
+    </div>
+
+    <script>
+        function generateKey() {
+            // Generate a random 6-character key (alphanumeric)
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let key = '';
+            for (let i = 0; i < 6; i++) {
+                key += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            // Get current Unix timestamp (seconds since 1970)
+            const timestamp = Math.floor(Date.now() / 1000);
+            // Combine key and timestamp with a hyphen
+            const fullKey = `${key}-${timestamp}`;
+            // Display the key
+            document.getElementById('keyOutput').innerText = `Your Key: ${fullKey} (Valid until: ${new Date((timestamp + 12*60*60)*1000).toLocaleString()})`;
+            // Auto-copy to clipboard if supported
+            try {
+                navigator.clipboard.writeText(fullKey).then(() => {
+                    alert("Key copied to clipboard!");
+                }, () => {
+                    alert("Failed to auto-copy. Please copy manually.");
+                });
+            } catch (err) {
+                console.error("Clipboard copy failed", err);
+            }
+        }
+    </script>
+</body>
+</html>
