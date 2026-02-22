@@ -6,126 +6,190 @@
     <title>Mist Hub Key Generator</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: radial-gradient(circle, #0a0a2a 0%, #000000 100%); /* Deep space gradient */
+            font-family: 'Orbitron', sans-serif; /* Futuristic font; fallback to sans-serif */
+            color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
-            background-color: #2c2c2c;
-            color: white;
+            position: relative;
         }
-        .container {
-            text-align: center;
-            background: #3c3c3c;
-            padding: 20px;
+
+        /* Galaxy Background with Subtle Nebula */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://i.imgur.com/ nebula-example.png') no-repeat center center/cover; /* Replace with a real nebula image URL */
+            opacity: 0.3;
+            z-index: -1;
+            animation: parallax 20s linear infinite;
+        }
+
+        @keyframes parallax {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10%); }
+        }
+
+        /* Popup Styles */
+        .popup {
+            background: rgba(0, 0, 0, 0.8);
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); /* Glowing cyan edge */
+            max-width: 300px;
+            animation: float 3s ease-in-out infinite;
         }
-        #keyOutput {
-            font-size: 18px;
-            margin: 20px 0;
-            padding: 10px;
-            background: #4c4c4c;
-            border: 1px solid #fff;
-            border-radius: 5px;
+
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
         }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background: #007bff;
-            color: white;
+
+        .popup h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .popup button {
+            background: #00ffff; /* Cyan glow */
             border: none;
+            padding: 10px 20px;
+            margin: 10px 0;
+            cursor: pointer;
             border-radius: 5px;
-            margin: 5px;
+            color: #000;
+            font-weight: bold;
         }
-        button:hover {
-            background: #0056b3;
+
+        .popup .caution {
+            background: #333;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
         }
-        button:disabled {
-            background: #555;
-            cursor: not-allowed;
+
+        /* Footer Phrase - Black and Bigger */
+        .footer {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            color: #000000; /* Black as requested */
+            font-size: 24px; /* Bigger as requested */
+            font-weight: bold;
+            text-shadow: 0 0 5px #ffffff; /* White glow for visibility on dark bg */
         }
-        #copyButton {
-            display: none;  /* Hidden until key is generated */
-            background: #28a745;
+
+        /* Canvas for 3D Starfield */
+        #starfield {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -2;
         }
-        #copyButton:hover {
-            background: #218838;
-        }
-        #cooldownMessage {
-            color: #ffcc00;
-            font-size: 14px;
+
+        /* Responsive for Mobile */
+        @media (max-width: 600px) {
+            .popup {
+                max-width: 90%;
+            }
+            .footer {
+                font-size: 18px; /* Slightly smaller on mobile for fit */
+            }
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet"> <!-- Futuristic font -->
 </head>
-<body onload="checkCooldown()">
-    <div class="container">
-        <h1>Mist Hub Key Generator</h1>
-        <p>Click below to generate a key valid for 12 hours.</p>
-        <button id="generateButton" onclick="generateKey()">Generate Key</button>
-        <div id="keyOutput">Your key will appear here.</div>
-        <button id="copyButton" onclick="copyKey()">Copy to Clipboard</button>
-        <p id="cooldownMessage"></p>
-        <p>Copy the key and paste it into Mist Hub in Roblox.</p>
-        <p>Key expires after 12 hours. Return via Linkvertise for a new one.</p>
-        <p style="font-size: 12px; color: #aaa;">Script & key system made by vincent</p>
+<body>
+    <canvas id="starfield"></canvas>
+
+    <div class="popup">
+        <h2>Mist Hub Key Generator</h2>
+        <button onclick="generateKey()">Click here to generate a key for 12 hours</button>
+        <div class="caution">
+            <p>Your key will appear here.</p>
+            <p>Key: Copy after you generate Mist Hub key for free use.</p>
+        </div>
     </div>
 
-    <script>
-        let currentKey = '';  // To store the generated key for copying
+    <div class="footer">Script & key system made by vincent</div>
 
-        function checkCooldown() {
-            const lastGenTime = localStorage.getItem('lastGenTime');
-            if (lastGenTime) {
-                const timePassed = Math.floor(Date.now() / 1000) - parseInt(lastGenTime);
-                if (timePassed < 43200) {  // 43200 seconds = 12 hours
-                    const remaining = 43200 - timePassed;
-                    const hours = Math.floor(remaining / 3600);
-                    const minutes = Math.floor((remaining % 3600) / 60);
-                    document.getElementById('cooldownMessage').innerText = `Cooldown: ${hours} hours ${minutes} minutes left.`;
-                    document.getElementById('generateButton').disabled = true;
-                    return true;  // Cooldown active
+    <script>
+        // 3D Starfield Animation (Lightweight for no lag)
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let stars = [];
+        const numStars = 200; // Low count for performance
+
+        function initStars() {
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width * 2 - canvas.width,
+                    y: Math.random() * canvas.height * 2 - canvas.height,
+                    z: Math.random() * canvas.width,
+                    speed: Math.random() * 0.5 + 0.5
+                });
+            }
+        }
+
+        function drawStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            for (let star of stars) {
+                const sx = (star.x / star.z) * (canvas.width / 2) + canvas.width / 2;
+                const sy = (star.y / star.z) * (canvas.height / 2) + canvas.height / 2;
+                const size = (1 - star.z / canvas.width) * 5;
+                ctx.beginPath();
+                ctx.arc(sx, sy, size, 0, Math.PI * 2);
+                ctx.fill();
+
+                star.z -= star.speed;
+                if (star.z <= 0) {
+                    star.z = canvas.width;
+                    star.x = Math.random() * canvas.width * 2 - canvas.width;
+                    star.y = Math.random() * canvas.height * 2 - canvas.height;
                 }
             }
-            return false;  // No cooldown
+            requestAnimationFrame(drawStars);
         }
 
+        initStars();
+        drawStars();
+
+        // Resize Handling
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Mobile Tilt Support (3D Effect)
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', (event) => {
+                const tiltX = event.beta / 90; // Normalize
+                const tiltY = event.gamma / 90;
+                for (let star of stars) {
+                    star.x += tiltY * 2;
+                    star.y += tiltX * 2;
+                }
+            });
+        }
+
+        // Placeholder Key Generator Function (Customize as needed)
         function generateKey() {
-            if (checkCooldown()) return;  // Prevent generation if on cooldown
-
-            // Generate a random 6-character key (alphanumeric)
-            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let key = '';
-            for (let i = 0; i < 6; i++) {
-                key += characters.charAt(Math.floor(Math.random() * characters.length));
-            }
-            // Get current Unix timestamp (seconds since 1970)
-            const timestamp = Math.floor(Date.now() / 1000);
-            // Combine key and timestamp with a hyphen
-            currentKey = `${key}-${timestamp}`;
-            // Display the key
-            document.getElementById('keyOutput').innerText = `Your Key: ${currentKey} (Valid until: ${new Date((timestamp + 43200) * 1000).toLocaleString()})`;
-            // Show copy button
-            document.getElementById('copyButton').style.display = 'inline-block';
-            // Save timestamp to localStorage for cooldown
-            localStorage.setItem('lastGenTime', timestamp);
-            // Start cooldown immediately
-            checkCooldown();
-        }
-
-        function copyKey() {
-            if (!currentKey) return;
-            try {
-                navigator.clipboard.writeText(currentKey).then(() => {
-                    alert("Key copied to clipboard!");
-                }, () => {
-                    alert("Failed to copy. Please copy manually.");
-                });
-            } catch (err) {
-                console.error("Clipboard copy failed", err);
-            }
+            alert('Generated Key: ' + Math.random().toString(36).substring(2, 15)); // Example; replace with real logic
         }
     </script>
 </body>
