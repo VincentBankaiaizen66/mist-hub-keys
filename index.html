@@ -38,24 +38,63 @@
             color: white;
             border: none;
             border-radius: 5px;
+            margin: 5px;
         }
         button:hover {
             background: #0056b3;
         }
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        #copyButton {
+            display: none;  /* Hidden until key is generated */
+            background: #28a745;
+        }
+        #copyButton:hover {
+            background: #218838;
+        }
+        #cooldownMessage {
+            color: #ffcc00;
+            font-size: 14px;
+        }
     </style>
 </head>
-<body>
+<body onload="checkCooldown()">
     <div class="container">
         <h1>Mist Hub Key Generator</h1>
         <p>Click below to generate a key valid for 12 hours.</p>
-        <button onclick="generateKey()">Generate Key</button>
+        <button id="generateButton" onclick="generateKey()">Generate Key</button>
         <div id="keyOutput">Your key will appear here.</div>
+        <button id="copyButton" onclick="copyKey()">Copy to Clipboard</button>
+        <p id="cooldownMessage"></p>
         <p>Copy the key and paste it into Mist Hub in Roblox.</p>
         <p>Key expires after 12 hours. Return via Linkvertise for a new one.</p>
+        <p style="font-size: 12px; color: #aaa;">Script & key system made by vincent</p>
     </div>
 
     <script>
+        let currentKey = '';  // To store the generated key for copying
+
+        function checkCooldown() {
+            const lastGenTime = localStorage.getItem('lastGenTime');
+            if (lastGenTime) {
+                const timePassed = Math.floor(Date.now() / 1000) - parseInt(lastGenTime);
+                if (timePassed < 43200) {  // 43200 seconds = 12 hours
+                    const remaining = 43200 - timePassed;
+                    const hours = Math.floor(remaining / 3600);
+                    const minutes = Math.floor((remaining % 3600) / 60);
+                    document.getElementById('cooldownMessage').innerText = `Cooldown: ${hours} hours ${minutes} minutes left.`;
+                    document.getElementById('generateButton').disabled = true;
+                    return true;  // Cooldown active
+                }
+            }
+            return false;  // No cooldown
+        }
+
         function generateKey() {
+            if (checkCooldown()) return;  // Prevent generation if on cooldown
+
             // Generate a random 6-character key (alphanumeric)
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let key = '';
@@ -65,15 +104,24 @@
             // Get current Unix timestamp (seconds since 1970)
             const timestamp = Math.floor(Date.now() / 1000);
             // Combine key and timestamp with a hyphen
-            const fullKey = `${key}-${timestamp}`;
+            currentKey = `${key}-${timestamp}`;
             // Display the key
-            document.getElementById('keyOutput').innerText = `Your Key: ${fullKey} (Valid until: ${new Date((timestamp + 12*60*60)*1000).toLocaleString()})`;
-            // Auto-copy to clipboard if supported
+            document.getElementById('keyOutput').innerText = `Your Key: ${currentKey} (Valid until: ${new Date((timestamp + 43200) * 1000).toLocaleString()})`;
+            // Show copy button
+            document.getElementById('copyButton').style.display = 'inline-block';
+            // Save timestamp to localStorage for cooldown
+            localStorage.setItem('lastGenTime', timestamp);
+            // Start cooldown immediately
+            checkCooldown();
+        }
+
+        function copyKey() {
+            if (!currentKey) return;
             try {
-                navigator.clipboard.writeText(fullKey).then(() => {
+                navigator.clipboard.writeText(currentKey).then(() => {
                     alert("Key copied to clipboard!");
                 }, () => {
-                    alert("Failed to auto-copy. Please copy manually.");
+                    alert("Failed to copy. Please copy manually.");
                 });
             } catch (err) {
                 console.error("Clipboard copy failed", err);
