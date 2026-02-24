@@ -13,6 +13,7 @@
 
         body {
             overflow: hidden;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); /* Dark cyberpunk indigo gradient */
             font-family: 'Orbitron', sans-serif;
             color: #ffffff;
             min-height: 100vh;
@@ -22,29 +23,27 @@
             position: relative;
             margin: 0;
             padding: 0;
-            background: #000; /* Fallback for devices that can't play video */
         }
 
-        /* Video Background */
-        #background-video {
+        /* Futuristic Grid Background Animation */
+        body::before {
+            content: '';
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Ensures video covers the screen without distortion */
-            z-index: -2;
-        }
-
-        /* Overlay to ensure text readability over video */
-        .video-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay for contrast */
+            background: repeating-linear-gradient(transparent, transparent 20px, rgba(0, 255, 255, 0.1) 20px, rgba(0, 255, 255, 0.1) 22px),
+                        repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(147, 51, 234, 0.1) 20px, rgba(147, 51, 234, 0.1) 22px);
             z-index: -1;
+            animation: gridMove 30s linear infinite;
+            opacity: 0.4;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-50px) translateX(-50px); }
+            100% { transform: translateY(0) translateX(0); }
         }
 
         /* Discord Invite Box */
@@ -114,63 +113,14 @@
             z-index: 1;
         }
 
-        /* Volume Control Container */
-        .volume-control {
+        /* Canvas for Particle Effects */
+        #particles {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-            z-index: 2;
-        }
-
-        .volume-control button {
-            background: none;
-            border: none;
-            color: #ffffff;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 5px;
-            transition: color 0.3s;
-            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
-        }
-
-        .volume-control button:hover {
-            color: #00ffff;
-        }
-
-        .volume-control input[type="range"] {
-            width: 100px;
-            -webkit-appearance: none;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-            outline: none;
-        }
-
-        .volume-control input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #00ffff;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
-        }
-
-        .volume-control input[type="range"]::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            background: #00ffff;
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
         }
 
         /* Responsive for Mobile and Tablets */
@@ -193,14 +143,6 @@
                 font-size: 16px;
                 bottom: 10px;
             }
-            .volume-control {
-                top: 10px;
-                right: 10px;
-                padding: 8px;
-            }
-            .volume-control input[type="range"] {
-                width: 80px;
-            }
         }
 
         @media (max-width: 480px) {
@@ -222,18 +164,6 @@
                 font-size: 14px;
                 bottom: 8px;
             }
-            .volume-control {
-                top: 8px;
-                right: 8px;
-                padding: 6px;
-            }
-            .volume-control input[type="range"] {
-                width: 60px;
-            }
-            .volume-control button {
-                font-size: 18px;
-                padding: 3px;
-            }
         }
 
         /* Ensure centering on all screen orientations */
@@ -249,20 +179,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Background Video -->
-    <video id="background-video" autoplay loop playsinline>
-        <source src="https://drive.google.com/uc?export=download&id=1c8Zsm6E1a_VqghYTCz8SBNGAeoFdPitr" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
-    <div class="video-overlay"></div>
-
-    <!-- Volume Control -->
-    <div class="volume-control">
-        <button id="mute-toggle">🔊</button>
-        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5">
-    </div>
-
-    <!-- Discord Content -->
+    <canvas id="particles"></canvas>
     <div class="discord-box">
         <h2>Join MistHub Discord Server</h2>
         <p>The key is in the Discord server under "Scripts" Category</p>
@@ -271,52 +188,66 @@
     <div class="footer">Community Portal by Vincent</div>
 
     <script>
-        // Video and Audio Control
-        const video = document.getElementById('background-video');
-        const muteToggle = document.getElementById('mute-toggle');
-        const volumeSlider = document.getElementById('volume-slider');
+        // Lightweight Particle Animation for Background
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
 
-        // Ensure video plays and loops
-        video.addEventListener('loadeddata', () => {
-            video.play().catch(error => {
-                console.log('Video autoplay failed:', error);
-            });
+        // Set canvas size to window size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+
+        let particles = [];
+        const numParticles = 100; // Reduced for performance on mobile
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < numParticles; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 0.5,
+                    speedX: (Math.random() * 1 - 0.5) * 0.5,
+                    speedY: (Math.random() * 1 - 0.5) * 0.5,
+                    color: Math.random() > 0.5 ? 'rgba(0, 255, 255, 0.6)' : 'rgba(147, 51, 234, 0.6)' // Cyan or Purple
+                });
+            }
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let particle of particles) {
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                particle.x += particle.speedX;
+                particle.y += particle.speedY;
+
+                // Wrap around screen edges
+                if (particle.x < 0) particle.x = canvas.width;
+                if (particle.x > canvas.width) particle.x = 0;
+                if (particle.y < 0) particle.y = canvas.height;
+                if (particle.y > canvas.height) particle.y = 0;
+            }
+            requestAnimationFrame(drawParticles);
+        }
+
+        initParticles();
+        drawParticles();
+
+        // Resize Handling for Canvas
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initParticles(); // Reinitialize particles to cover new canvas size
         });
 
-        // Mute/Unmute Toggle
-        muteToggle.addEventListener('click', () => {
-            if (video.muted) {
-                video.muted = false;
-                muteToggle.textContent = '🔊';
-                volumeSlider.value = video.volume;
-            } else {
-                video.muted = true;
-                muteToggle.textContent = '🔇';
-                volumeSlider.value = 0;
-            }
-        });
-
-        // Volume Slider Control
-        volumeSlider.addEventListener('input', () => {
-            video.volume = volumeSlider.value;
-            if (video.volume === 0) {
-                video.muted = true;
-                muteToggle.textContent = '🔇';
-            } else {
-                video.muted = false;
-                muteToggle.textContent = '🔊';
-            }
-        });
-
-        // Update slider if volume changes externally
-        video.addEventListener('volumechange', () => {
-            if (video.muted) {
-                volumeSlider.value = 0;
-                muteToggle.textContent = '🔇';
-            } else {
-                volumeSlider.value = video.volume;
-                muteToggle.textContent = '🔊';
-            }
+        // Handle orientation change for mobile devices
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeCanvas, 100); // Small delay to ensure correct dimensions
         });
     </script>
 </body>
