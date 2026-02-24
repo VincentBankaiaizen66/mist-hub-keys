@@ -2,21 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MistHub Discord Invite</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             overflow: hidden;
             background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); /* Dark cyberpunk indigo gradient */
             font-family: 'Orbitron', sans-serif;
             color: #ffffff;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
             position: relative;
+            margin: 0;
+            padding: 0;
         }
 
         /* Futuristic Grid Background Animation */
@@ -48,8 +54,11 @@
             text-align: center;
             box-shadow: 0 0 25px rgba(0, 255, 255, 0.3), 0 0 15px rgba(147, 51, 234, 0.2); /* Cyan and purple glow */
             max-width: 450px;
+            width: 90%;
             animation: float 4s ease-in-out infinite;
             
+            position: relative;
+            margin: auto;
         }
 
         @keyframes float {
@@ -101,21 +110,24 @@
             font-size: 20px;
             font-weight: bold;
             text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+            z-index: 1;
         }
 
         /* Canvas for Particle Effects */
-        # Particles {
+        #particles {
             position: absolute;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
             z-index: -2;
         }
 
-        /* Responsive for Mobile */
-        @media (max-width: 600px) {
+        /* Responsive for Mobile and Tablets */
+        @media (max-width: 768px) {
             .discord-box {
-                max-width: 85%;
                 padding: 20px;
+                width: 85%;
             }
             .discord-box h2 {
                 font-size: 22px;
@@ -129,6 +141,38 @@
             }
             .footer {
                 font-size: 16px;
+                bottom: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .discord-box {
+                padding: 15px;
+                width: 90%;
+            }
+            .discord-box h2 {
+                font-size: 20px;
+            }
+            .discord-box p {
+                font-size: 14px;
+            }
+            .discord-box a {
+                font-size: 16px;
+                padding: 6px 12px;
+            }
+            .footer {
+                font-size: 14px;
+                bottom: 8px;
+            }
+        }
+
+        /* Ensure centering on all screen orientations */
+        @media (orientation: landscape) and (max-height: 500px) {
+            body {
+                align-items: center;
+            }
+            .discord-box {
+                margin: 0 auto;
             }
         }
     </style>
@@ -136,26 +180,30 @@
 </head>
 <body>
     <canvas id="particles"></canvas>
-
     <div class="discord-box">
         <h2>Join MistHub Discord Server</h2>
         <p>The key is in the Discord server under "Scripts" Category</p>
         <p><a href="https://discord.gg/rPcSctCfWC" target="_blank">Join Discord Server</a></p>
     </div>
-
     <div class="footer">Community Portal by Vincent</div>
 
     <script>
         // Lightweight Particle Animation for Background
         const canvas = document.getElementById('particles');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+
+        // Set canvas size to window size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
 
         let particles = [];
-        const numParticles = 100; // Reduced for performance
+        const numParticles = 100; // Reduced for performance on mobile
 
         function initParticles() {
+            particles = [];
             for (let i = 0; i < numParticles; i++) {
                 particles.push({
                     x: Math.random() * canvas.width,
@@ -191,10 +239,15 @@
         initParticles();
         drawParticles();
 
-        // Resize Handling
+        // Resize Handling for Canvas
         window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            resizeCanvas();
+            initParticles(); // Reinitialize particles to cover new canvas size
+        });
+
+        // Handle orientation change for mobile devices
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeCanvas, 100); // Small delay to ensure correct dimensions
         });
     </script>
 </body>
