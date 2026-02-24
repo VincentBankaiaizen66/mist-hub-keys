@@ -9,8 +9,8 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background: radial-gradient(circle, #0a0a2a 0%, #000000 100%); /* Deep space gradient */
-            font-family: 'Orbitron', sans-serif; /* Futuristic font; fallback to sans-serif */
+            background: linear-gradient(45deg, #8000ff, #cc00ff); /* Neon purple gradient */
+            font-family: 'Orbitron', sans-serif;
             color: #ffffff;
             display: flex;
             justify-content: center;
@@ -19,7 +19,7 @@
             position: relative;
         }
 
-        /* Galaxy Background with Subtle Nebula */
+        /* Sparking Particle Effect Overlay */
         body::before {
             content: '';
             position: absolute;
@@ -27,15 +27,46 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: url('https://i.imgur.com/ nebula-example.png') no-repeat center center/cover; /* Replace with a real nebula image URL */
-            opacity: 0.3;
+            background: transparent;
             z-index: -1;
-            animation: parallax 20s linear infinite;
+            pointer-events: none;
         }
 
-        @keyframes parallax {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-10%); }
+        /* Discord Invite Box */
+        .discord-box {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(147, 51, 234, 0.5); /* Purple glow */
+            max-width: 400px;
+            animation: float 3s ease-in-out infinite;
+            position: absolute;
+            top: 60%;
+            transform: translateY(-50%);
+        }
+
+        .discord-box h2 {
+            margin: 0 0 15px 0;
+            font-size: 24px;
+            color: #cc00ff; /* Neon purple title */
+        }
+
+        .discord-box p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .discord-box a {
+            color: #00ffff; /* Cyan link color for contrast */
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        .discord-box a:hover {
+            color: #ff00ff; /* Bright magenta on hover */
+            text-decoration: underline;
         }
 
         /* Popup Styles */
@@ -47,12 +78,15 @@
             box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); /* Glowing cyan edge */
             max-width: 300px;
             animation: float 3s ease-in-out infinite;
+            position: absolute;
+            top: 30%;
+            transform: translateY(-50%);
         }
 
         @keyframes float {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0); }
+            0% { transform: translateY(-10px); }
+            50% { transform: translateY(10px); }
+            100% { transform: translateY(-10px); }
         }
 
         .popup h2 {
@@ -90,7 +124,7 @@
             text-shadow: 0 0 5px #ffffff; /* White glow for visibility on dark bg */
         }
 
-        /* Canvas for 3D Starfield */
+        /* Canvas for 3D Starfield and Sparks */
         #starfield {
             position: absolute;
             top: 0;
@@ -102,6 +136,11 @@
         @media (max-width: 600px) {
             .popup {
                 max-width: 90%;
+                top: 25%;
+            }
+            .discord-box {
+                max-width: 90%;
+                top: 60%;
             }
             .footer {
                 font-size: 18px; /* Slightly smaller on mobile for fit */
@@ -122,17 +161,25 @@
         </div>
     </div>
 
+    <div class="discord-box">
+        <h2>Join MistHub Discord Server</h2>
+        <p>The key is in the Discord server under "Scripts" Category</p>
+        <p><a href="https://discord.gg/rPcSctCfWC" target="_blank">Join Discord Server</a></p>
+    </div>
+
     <div class="footer">Script & key system made by vincent</div>
 
     <script>
-        // 3D Starfield Animation (Lightweight for no lag)
+        // 3D Starfield Animation with Sparking Effects
         const canvas = document.getElementById('starfield');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
         let stars = [];
+        let sparks = [];
         const numStars = 200; // Low count for performance
+        const numSparks = 50; // Number of sparking particles
 
         function initStars() {
             for (let i = 0; i < numStars; i++) {
@@ -145,8 +192,24 @@
             }
         }
 
+        function initSparks() {
+            for (let i = 0; i < numSparks; i++) {
+                sparks.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 3 + 1,
+                    speedX: (Math.random() * 2 - 1) * 2,
+                    speedY: (Math.random() * 2 - 1) * 2,
+                    life: Math.random() * 30 + 20, // Frames of life
+                    maxLife: Math.random() * 30 + 20,
+                    color: `hsl(${Math.random() * 60 + 270}, 100%, ${Math.random() * 50 + 50}%)` // Purple-white spark tones
+                });
+            }
+        }
+
         function drawStars() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Draw stars
             ctx.fillStyle = '#ffffff';
             for (let star of stars) {
                 const sx = (star.x / star.z) * (canvas.width / 2) + canvas.width / 2;
@@ -163,10 +226,38 @@
                     star.y = Math.random() * canvas.height * 2 - canvas.height;
                 }
             }
+            // Draw sparks
+            for (let i = 0; i < sparks.length; i++) {
+                let spark = sparks[i];
+                ctx.fillStyle = spark.color;
+                ctx.globalAlpha = spark.life / spark.maxLife;
+                ctx.beginPath();
+                ctx.arc(spark.x, spark.y, spark.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                spark.x += spark.speedX;
+                spark.y += spark.speedY;
+                spark.life -= 1;
+
+                if (spark.life <= 0) {
+                    sparks[i] = {
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: Math.random() * 3 + 1,
+                        speedX: (Math.random() * 2 - 1) * 2,
+                        speedY: (Math.random() * 2 - 1) * 2,
+                        life: Math.random() * 30 + 20,
+                        maxLife: Math.random() * 30 + 20,
+                        color: `hsl(${Math.random() * 60 + 270}, 100%, ${Math.random() * 50 + 50}%)`
+                    };
+                }
+            }
+            ctx.globalAlpha = 1;
             requestAnimationFrame(drawStars);
         }
 
         initStars();
+        initSparks();
         drawStars();
 
         // Resize Handling
